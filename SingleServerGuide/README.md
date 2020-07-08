@@ -1,4 +1,5 @@
 ## Single Server Guide
+
 For this setup you run the whole stack on a single server. It is not recommended, but can be useful in some cases.
 This server is refered to as 'SingleServer'. Make sure this server passes the requirements described in [server setup](../SERVERSETUP.md).
 
