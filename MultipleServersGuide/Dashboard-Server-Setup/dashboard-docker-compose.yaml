@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  dashboard-server:
+    image: cfei/dashboard-server
+    container_name: dashboard-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # SERVER_NAME could be Server1, Server2, Server3 etc. It has to be unique for each server
+      SERVER_NAME: SingleServer
+      # KAFKA_URL has to point to Server3 DNS resolvable address.
+      KAFKA_URL: "${HOST_DNS}:9093"
