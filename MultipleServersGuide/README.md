@@ -4,7 +4,7 @@ For the following steps you need to have access to minimum 4 servers ('server1',
 During this guide we will visit each server twice.
 
 #### Step 1/5
-On **server1** we install kerberos.
+On **server1** we install [kerberos](https://hub.docker.com/repository/docker/cfei/kerberos).
 
 1.1 - Download the folder 'Server1' inside the 'MultipleServersGuide' folder from this repository.
 
@@ -15,13 +15,13 @@ On **server1** we install kerberos.
 1.4 - Control output
 
 #### Step 2/5
-On **server2** we install zookeeper, acl-manager and dashboard-server.
+On **server2** we install [zookeeper](https://hub.docker.com/repository/docker/cfei/zookeeper), [acl-manager](https://hub.docker.com/repository/docker/cfei/acl-security-manager).
 
 #### Step 3/5
-On **server3** we install kafka and dashboard-server
+On **server3** we install [kafka](https://hub.docker.com/repository/docker/cfei/kafka)
 
 #### Step 4/5
-On **server4** we install Dashboard-Interface and dashboard-server alongside a postgres database.
+On **server4** we install [Dashboard-Interface](https://hub.docker.com/repository/docker/cfei/dashboard-interface) alongside a [postgres database](https://hub.docker.com/_/postgres).
 
 4.1 - Download the folder 'Server4' inside MultipleServersGuide from this repository.
 
@@ -41,16 +41,20 @@ After login, you should see this:
 
 ![interface homepage][interface-homepage]
 
-The tables are empty, but we now have all the necesarry containers to install dashboard-server on all our servers.
+The tables are empty, but we now have all the necesarry containers to install [dashboard-server](https://hub.docker.com/repository/docker/cfei/dashboard-server) on all our servers.
 
 #### Step 5/5
-On **server1**, **server2**, **server3** and **server4** we install Dashboard-Server.
+On **server1**, **server2**, **server3** and **server4** we install [Dashboard-Server](https://hub.docker.com/repository/docker/cfei/dashboard-server).
 
 On each server do the following:
 
 5.1 - Download the folder Dashboard-Server-Setup inside 'MultipleServersGuide' from this repository.
 
 5.2 - Change 'KAFKA_URL' and 'SERVER_NAME' inside 'dashboard-docker-compose.yaml'
+
+5.3 - Run `docker-compose -f dashboard-docker-compose.yaml up`
+
+5.4 - Control output
 
 
 
