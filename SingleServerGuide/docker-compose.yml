@@ -1,87 +1,84 @@
 version: "3"
 
-services:    
+services:
   kerberos-db:
     image: postgres
     container_name: kerberos-db
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_USER: "${KERBEROS_DB_USER_NAME}"
       POSTGRES_PASSWORD: "${KERBEROS_DB_USER_PASSWORD}"
       POSTGRES_DB: kerberos_db
-    networks:
-      - back
 
   kerberos:
     image: cfei/kerberos
     container_name: kerberos
-    ports:
-      - 6000:6000
+    network_mode: "host"
     environment:
       KERBEROS_API_KEY: "${KERBEROS_API_KEY}"
       KERBEROS_HOST_DNS: "${HOST_DNS}"
       KERBEROS_REALM: "${KERBEROS_REALM}"
       KERBEROS_API_PORT: 6000
-      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=kerberos-db;Port=5432;Database=kerberos_db;Username=${KERBEROS_DB_USER_NAME};Password=${KERBEROS_DB_USER_PASSWORD};"
+      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=${HOST_DNS};Port=5432;Database=kerberos_db;Username=${KERBEROS_DB_USER_NAME};Password=${KERBEROS_DB_USER_PASSWORD};"
       KERBEROS_INIT_USERS: "Username=zookeeper;Password=${ZOOKEEPER_PASSWORD};Host=${HOST_DNS},Username=kafka;Password=${KAFKA_PASSWORD};Host=${HOST_DNS},Username=admin;Password=${ADMIN_PASSWORD}"
     depends_on:
       - kerberos-db
-    networks:
-      - front
-      - back
-  
+
   zookeeper:
     image: cfei/zookeeper:2.0.0-beta
     container_name: zookeeper
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
     environment:
       ZOO_ID: 1
       ZOO_PORT: 2181
       ZOO_AUTHENTICATION: KERBEROS
-      ZOO_KERBEROS_PUBLIC_URL: kerberos
-      ZOO_KERBEROS_API_URL: "http://kerberos:6000/get-keytab"
+      ZOO_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
+      ZOO_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
       ZOO_KERBEROS_API_USERNAME: "zookeeper/${HOST_DNS}"
       ZOO_KERBEROS_API_PASSWORD: "${ZOOKEEPER_PASSWORD}"
       ZOO_KERBEROS_REALM: "${KERBEROS_REALM}"
       ZOO_REMOVE_HOST_AND_REALM: "true"
-    depends_on: 
+    depends_on:
       - kerberos
-    networks:
-      - back
 
   acl-manager:
     image: cfei/acl-security-manager
     container_name: acl-manager
     ports:
       - 9000:9000
-    environment: 
-      AUTHORIZER_ZOOKEEPER_CONNECT: zookeeper:2181
+    environment:
+      AUTHORIZER_ZOOKEEPER_CONNECT: "${HOST_DNS}:2181"
       ACL_API_PORT: 9000
       ACL_API_KEY: "${ACL_MANAGER_API_KEY}"
-      ACL_KERBEROS_API_URL: "http://kerberos:6000/get-keytab"
+      ACL_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
+      ACL_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
       ACL_KERBEROS_API_ZOOKEEPER_USERNAME: "zookeeper/${HOST_DNS}"
       ACL_KERBEROS_API_ZOOKEEPER_PASSWORD: "${ZOOKEEPER_PASSWORD}"
       ACL_KERBEROS_REALM: "${KERBEROS_REALM}"
-      ACL_KERBEROS_PUBLIC_URL: kerberos
-    depends_on: 
+    depends_on:
       - zookeeper
       - kerberos
-    networks:
-      - back
 
   kafka:
     image: cfei/kafka:2.0.0-beta
     container_name: kafka
     ports:
       - 9092:9092
+      - 9093:9093
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ZOOKEEPER_CONNECT: "${HOST_DNS}:2181"
       KAFKA_LISTENERS: INTERNAL_SASL_PLAINTEXT://0.0.0.0:9092,SASL_PLAINTEXT://0.0.0.0:9093
       KAFKA_ADVERTISED_LISTENERS: "INTERNAL_SASL_PLAINTEXT://${HOST_DNS}:9092,SASL_PLAINTEXT://${HOST_DNS}:9093"
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL_SASL_PLAINTEXT
       KAFKA_AUTHENTICATION: KERBEROS
-      KAFKA_KERBEROS_PUBLIC_URL: kerberos
+      KAFKA_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
       KAFKA_KERBEROS_REALM: "${KERBEROS_REALM}"
-      KAFKA_KERBEROS_API_URL: http://kerberos:6000/get-keytab
+      KAFKA_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
       KAFKA_KERBEROS_API_KAFKA_USERNAME: "kafka/${HOST_DNS}"
       KAFKA_KERBEROS_API_KAFKA_PASSWORD: "${KAFKA_PASSWORD}"
       KAFKA_KERBEROS_API_ZOOKEEPER_USERNAME: "zookeeper/${HOST_DNS}"
@@ -93,9 +90,6 @@ services:
     depends_on:
       - kerberos
       - zookeeper
-    networks:
-      - front
-      - back
 
   interface-db:
     image: postgres
@@ -104,19 +98,17 @@ services:
       POSTGRES_USER: "${DASHBOARD_DB_USER_NAME}"
       POSTGRES_PASSWORD: "${DASHBOARD_DB_USER_PASSWORD}"
       POSTGRES_DB: interface_db
-    networks:
-      - back
 
   interface:
     image: cfei/dashboard-interface
     container_name: interface
     ports:
-      - 3001:3001
+      - 3000:3000
       - 5000:5000
     environment:
-      DASHBOARDI_UI_PORT: 3001
+      DASHBOARDI_UI_PORT: 3000
       DASHBOARDI_SOCKET_SERVER_PORT: 5000
-      DASHBOARDI_POSTGRES_CONNECTION_STRING: "Host=interface-db;Port=5432;Database=interface_db;Username=${DASHBOARD_DB_USER_NAME};Password=${DASHBOARD_DB_USER_PASSWORD}"
+      DASHBOARDI_POSTGRES_CONNECTION_STRING: "Host=interface-db;Port=5433;Database=interface_db;Username=${DASHBOARD_DB_USER_NAME};Password=${DASHBOARD_DB_USER_PASSWORD}"
       DASHBOARDI_API_KEY: "${DASHBOARD_API_KEY}"
       DASHBOARDI_JWT_KEY: "${DASHBOARD_JWT_KEY}"
       DASHBOARDI_INIT_USER_EMAIL: "${DASHBOARD_USER_EMAIL}"
@@ -125,9 +117,6 @@ services:
     depends_on:
       - interface-db
       - kerberos
-    networks:
-      - back
-      - front
 
   dashboard-server:
     image: cfei/dashboard-server
@@ -136,13 +125,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       SERVER_NAME: SingleServer
-    depends_on: 
+      KAFKA_URL: "${HOST_DNS}:9093"
+    depends_on:
       - interface
-    networks:
-      - back
-
-networks:
-  front:
-    driver: bridge
-  back:
-    driver: bridge
+      - kerberos

@@ -11,13 +11,13 @@
 In addition, all servers should preferably be on a closed network with minimal open ports to the outside.
 
 
-| Name         |  CPU  |  RAM  | Storage |     Network Ports      |   Public Ports   |
-| ------------ | :---: | :---: | :-----: | :--------------------: | :--------------: |
-| Server1      |   4   |  6GB  |  100GB  |           -            |    3000, 5000    |
-| Server2      |   2   |  4GB  |  45GB   |        88, 6000        |        -         |
-| Server3      |   4   |  6GB  |  100GB  | 2181, 2888, 3888, 9000 |        -         |
-| Server4      |   4   |  8GB  |  100GB  |          9093          |       9092       |
-| SingleServer |   6   | 12GB  |  250GB  |           -            | 9092, 3000, 5000 |
+| Name         |  CPU  |  RAM  | Storage |     Network Ports      |                    Public Ports                    |
+| ------------ | :---: | :---: | :-----: | :--------------------: | :------------------------------------------------: |
+| Server1      |   4   |  6GB  |  100GB  |           -            |                     3000, 5000                     |
+| Server2      |   2   |  4GB  |  45GB   |        88, 6000        |                         -                          |
+| Server3      |   4   |  6GB  |  100GB  | 2181, 2888, 3888, 9000 |                         -                          |
+| Server4      |   4   |  8GB  |  100GB  |          9093          |                        9092                        |
+| SingleServer |   6   | 12GB  |  250GB  |           -            | 9092, 9093, 3000, 5000, 2181, 2888, 3888, 5432, 88 |
 
 #### Individual Service Requirements
 Kafka and zookeeper storage can be increased depending on your needs. If your kafka / zookeeper cluster is huge, you will need to increase storage as they store logs on disk.

@@ -1,7 +1,8 @@
 ## Single Server Guide
 
-For this setup you run the whole stack on a single server. It is not recommended, but can be useful in some cases.
-This server is refered to as 'SingleServer'. Make sure this server passes the requirements described in [server setup](../SERVERSETUP.md).
+For this setup you run the whole stack on a single linux server. It is not recommended, but can be useful in some cases.
+
+This server is refered to as 'SingleServer'. Make sure this server passes the requirements described in [server setup](../SERVERSETUP.md). **Make sure you have opened all the ports and are on a linux machine**.
 
 In order to make this viable in a production setup you need to seperate services onto other hosts. Each host should then have Dashboard-Server installed alongside the service.
 E.g. Create a Kerberos server which installs Dashboard-Server, Kerberos, then onto another host install a Postgres Database for Kerberos.
