@@ -4,16 +4,20 @@ services:
   kerberos-db:
     image: postgres
     container_name: kerberos-db
+    restart: on-failure
     ports:
       - 5432:5432
     environment:
       POSTGRES_USER: "${KERBEROS_DB_USER_NAME}"
       POSTGRES_PASSWORD: "${KERBEROS_DB_USER_PASSWORD}"
       POSTGRES_DB: kerberos_db
+    volumes:
+      - ./kerberos-postgres-data:/var/lib/postgresql/data
 
   kerberos:
     image: cfei/kerberos
     container_name: kerberos
+    restart: on-failure
     network_mode: "host"
     environment:
       KERBEROS_API_KEY: "${KERBEROS_API_KEY}"
@@ -28,6 +32,7 @@ services:
   zookeeper:
     image: cfei/zookeeper:2.0.0-beta
     container_name: zookeeper
+    restart: on-failure
     ports:
       - 2181:2181
       - 2888:2888
@@ -44,10 +49,14 @@ services:
       ZOO_REMOVE_HOST_AND_REALM: "true"
     depends_on:
       - kerberos
+    volumes: 
+      - ./zookeeper-data:/data/zookeeper
+      - ./zookeeper-logs:/datalogs/zookeeper
 
   acl-manager:
     image: cfei/acl-security-manager
     container_name: acl-manager
+    restart: on-failure
     ports:
       - 9000:9000
     environment:
@@ -62,10 +71,13 @@ services:
     depends_on:
       - zookeeper
       - kerberos
+    volumes: 
+      - ./aclmanager-conf:/conf
 
   kafka:
     image: cfei/kafka:2.0.0-beta
     container_name: kafka
+    restart: on-failure
     ports:
       - 9092:9092
       - 9093:9093
@@ -90,18 +102,25 @@ services:
     depends_on:
       - kerberos
       - zookeeper
+    volumes: 
+      - ./kafka-data:/data/kafka
+      - ./kafka-logs:/opt/kafka/logs
 
   interface-db:
     image: postgres
     container_name: interface-db
+    restart: on-failure
     environment:
       POSTGRES_USER: "${DASHBOARD_DB_USER_NAME}"
       POSTGRES_PASSWORD: "${DASHBOARD_DB_USER_PASSWORD}"
       POSTGRES_DB: interface_db
+    volumes:
+      - ./interface-postgres-data:/var/lib/postgresql/data
 
   interface:
     image: cfei/dashboard-interface
     container_name: interface
+    restart: on-failure
     ports:
       - 3000:3000
       - 5000:5000
@@ -122,6 +141,7 @@ services:
   dashboard-server:
     image: cfei/dashboard-server
     container_name: dashboard-server
+    restart: on-failure
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:

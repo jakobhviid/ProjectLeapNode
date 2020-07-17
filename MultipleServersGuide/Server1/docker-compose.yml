@@ -4,16 +4,20 @@ services:
   kerberos-db:
     image: postgres
     container_name: kerberos-db
+    restart: on-failure
     ports:
       - 5432:5432
     environment:
       POSTGRES_USER: "${KERBEROS_DB_USER_NAME}"
       POSTGRES_PASSWORD: "${KERBEROS_DB_USER_PASSWORD}"
       POSTGRES_DB: kerberos_db
-
+    volumes:
+      - ./kerberos-postgres-data:/var/lib/postgresql/data
+      
   kerberos:
     image: cfei/kerberos
     container_name: kerberos
+    restart: on-failure
     network_mode: "host"
     environment:
       KERBEROS_API_KEY: "${KERBEROS_API_KEY}"

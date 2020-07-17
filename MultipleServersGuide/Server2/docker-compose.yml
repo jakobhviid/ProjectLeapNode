@@ -4,6 +4,7 @@ services:
   zookeeper:
     image: cfei/zookeeper:2.0.0-beta
     container_name: zookeeper
+    restart: on-failure
     ports:
       - 2181:2181
       - 2888:2888
@@ -18,10 +19,14 @@ services:
       ZOO_KERBEROS_API_PASSWORD: "${ZOOKEEPER_PASSWORD}"
       ZOO_KERBEROS_REALM: "${KERBEROS_REALM}"
       ZOO_REMOVE_HOST_AND_REALM: "true"
+    volumes:
+      - ./zookeeper-data:/data/zookeeper
+      - ./zookeeper-logs:/datalogs/zookeeper
 
   acl-manager:
     image: cfei/acl-security-manager
     container_name: acl-manager
+    restart: on-failure
     ports:
       - 9000:9000
     environment:
@@ -35,3 +40,5 @@ services:
       ACL_KERBEROS_REALM: "${KERBEROS_REALM}"
     depends_on:
       - zookeeper
+    volumes:
+      - ./aclmanager-conf:/conf

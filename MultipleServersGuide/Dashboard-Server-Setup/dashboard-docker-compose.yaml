@@ -4,6 +4,7 @@ services:
   dashboard-server:
     image: cfei/dashboard-server
     container_name: dashboard-server
+    restart: on-failure
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:

@@ -4,6 +4,7 @@ services:
   kafka:
     image: cfei/kafka:2.0.0-beta
     container_name: kafka
+    restart: on-failure
     ports:
       - 9092:9092
       - 9093:9093
@@ -25,3 +26,6 @@ services:
       KAFKA_ACL_ENABLE: "true"
       KAFKA_ACL_SUPER_USERS: User:kafka;User:admin
       KAFKA_ZOOKEEPER_SET_ACL: "true"
+    volumes:
+      - ./kafka-data:/data/kafka
+      - ./kafka-logs:/opt/kafka/logs
