@@ -9,8 +9,10 @@ E.g. Create a Kerberos server which installs Dashboard-Server, Kerberos, then on
 
 ### Step by step guide
 1. Download the folder 'SingleServerGuide' from this repository
+   1. In ubuntu you can use subversion to download the folder to your current working directory `apt install subversion && svn export https://github.com/jakobhviid/ProjectLeapNode/trunk/SingleServerGuide && cd SingleServerGuide`
 2. Change values inside .env to fit your setup
 3. Run the following command in your terminal (bash) `docker-compose up`
 4. Control output in the console
+   1. If you encounter problems try to run `docker-compose down && docker-compose up --build`
 
 

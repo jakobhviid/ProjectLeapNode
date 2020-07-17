@@ -1,10 +1,26 @@
 version: "3"
 
 services:
-  server:
-    image: cfei/docker-dashboard-server
-    container_name: dashboard-server
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+  kerberos-db:
+    image: postgres
+    container_name: kerberos-db
+    ports:
+      - 5432:5432
     environment:
-      SERVER_NAME: <<SERVERNAME>>
+      POSTGRES_USER: "${KERBEROS_DB_USER_NAME}"
+      POSTGRES_PASSWORD: "${KERBEROS_DB_USER_PASSWORD}"
+      POSTGRES_DB: kerberos_db
+
+  kerberos:
+    image: cfei/kerberos
+    container_name: kerberos
+    network_mode: "host"
+    environment:
+      KERBEROS_API_KEY: "${KERBEROS_API_KEY}"
+      KERBEROS_HOST_DNS: "${SERVER1_HOST_DNS}"
+      KERBEROS_REALM: "${KERBEROS_REALM}"
+      KERBEROS_API_PORT: 6000
+      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=${SERVER1_HOST_DNS};Port=5432;Database=kerberos_db;Username=${KERBEROS_DB_USER_NAME};Password=${KERBEROS_DB_USER_PASSWORD};"
+      KERBEROS_INIT_USERS: "Username=zookeeper;Password=${ZOOKEEPER_PASSWORD};Host=${SERVER2_HOST_DNS},Username=kafka;Password=${KAFKA_PASSWORD};Host=${SERVER3_HOST_DNS},Username=admin;Password=${ADMIN_PASSWORD}"
+    depends_on:
+      - kerberos-db
