@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: "${KERBEROS_DB_USER_PASSWORD}"
       POSTGRES_DB: kerberos_db
     volumes:
-      - ./kerberos-postgres-data:/var/lib/postgresql/data
+      - ./containervolumes/kerberos-postgres-data:/var/lib/postgresql/data
 
   kerberos:
     image: cfei/kerberos
@@ -25,7 +25,7 @@ services:
       KERBEROS_REALM: "${KERBEROS_REALM}"
       KERBEROS_API_PORT: 6000
       KERBEROS_POSTGRES_CONNECTION_STRING: "Host=${HOST_DNS};Port=5432;Database=kerberos_db;Username=${KERBEROS_DB_USER_NAME};Password=${KERBEROS_DB_USER_PASSWORD};"
-      KERBEROS_INIT_USERS: "Username=zookeeper;Password=${ZOOKEEPER_PASSWORD};Host=${HOST_DNS},Username=kafka;Password=${KAFKA_PASSWORD};Host=${HOST_DNS},Username=admin;Password=${ADMIN_PASSWORD}"
+      KERBEROS_INIT_USERS: "Username=zookeeper;Password=${ZOOKEEPER_PASSWORD};Host=${HOST_DNS},Username=kafka;Password=${KAFKA_PASSWORD};Host=${HOST_DNS},Username=dashboardserver;Password=${DASHBOARD_SERVER_PASSWORD};Host=64.227.67.167,Username=dashboardinterface;Password=${DASHBOARD_INTERFACE_PASSWORD};Host=${HOST_DNS},Username=admin;Password=${ADMIN_PASSWORD}"
     depends_on:
       - kerberos-db
 
@@ -49,9 +49,9 @@ services:
       ZOO_REMOVE_HOST_AND_REALM: "true"
     depends_on:
       - kerberos
-    volumes: 
-      - ./zookeeper-data:/data/zookeeper
-      - ./zookeeper-logs:/datalogs/zookeeper
+    volumes:
+      - ./containervolumes/zookeeper-data:/data/zookeeper
+      - ./containervolumes/zookeeper-logs:/datalogs/zookeeper
 
   acl-manager:
     image: cfei/acl-security-manager
@@ -68,11 +68,12 @@ services:
       ACL_KERBEROS_API_ZOOKEEPER_USERNAME: "zookeeper/${HOST_DNS}"
       ACL_KERBEROS_API_ZOOKEEPER_PASSWORD: "${ZOOKEEPER_PASSWORD}"
       ACL_KERBEROS_REALM: "${KERBEROS_REALM}"
+      ACL_INIT_SUPERUSERS: zookeeper,
     depends_on:
       - zookeeper
       - kerberos
-    volumes: 
-      - ./aclmanager-conf:/conf
+    volumes:
+      - ./containervolumes/aclmanager-conf:/conf
 
   kafka:
     image: cfei/kafka:2.0.0-beta
@@ -97,14 +98,14 @@ services:
       KAFKA_KERBEROS_API_ZOOKEEPER_PASSWORD: "${ZOOKEEPER_PASSWORD}"
       KAFKA_HEAP_OPTS: "-Xmx${KAFKA_RAM}G"
       KAFKA_ACL_ENABLE: "true"
-      KAFKA_ACL_SUPER_USERS: User:kafka;User:admin
+      KAFKA_ACL_SUPER_USERS: User:kafka;User:admin;User:dashboardserver;User:dashboardinterface
       KAFKA_ZOOKEEPER_SET_ACL: "true"
     depends_on:
       - kerberos
       - zookeeper
-    volumes: 
-      - ./kafka-data:/data/kafka
-      - ./kafka-logs:/opt/kafka/logs
+    volumes:
+      - ./containervolumes/kafka-data:/data/kafka
+      - ./containervolumes/kafka-logs:/opt/kafka/logs
 
   interface-db:
     image: postgres
@@ -147,6 +148,12 @@ services:
     environment:
       SERVER_NAME: SingleServer
       KAFKA_URL: "${HOST_DNS}:9093"
+      DASHBOARDS_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
+      DASHBOARDS_KERBEROS_REALM: "${KERBEROS_REALM}"
+      DASHBOARDS_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
+      DASHBOARDS_KERBEROS_API_SERVICE_USERNAME: dashboardserver
+      DASHBOARDS_KERBEROS_API_SERVICE_PASSWORD: "${DASHBOARD_SERVER_PASSWORD}"
+      DASHBOARDS_BROKER_KERBEROS_SERVICE_NAME: kafka
     depends_on:
       - interface
       - kerberos
