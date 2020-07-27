@@ -135,9 +135,15 @@ services:
       DASHBAORDI_INIT_PASSWORD: "${DASHBOARD_USER_PASSWORD}"
       DASHBOARDI_API_DNS: "https://${HOST_DNS}:5000"
       DASHBOARDI_KAFKA_URL: "${HOST_DNS}:9093"
+      DASHBOARDI_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
+      DASHBOARDI_KERBEROS_REALM: "${KERBEROS_REALM}"
+      DASHBOARDI_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
+      DASHBOARDI_KERBEROS_API_SERVICE_USERNAME: "dashboardinterface/${HOST_DNS}"
+      DASHBOARDI_KERBEROS_API_SERVICE_PASSWORD: "${DASHBOARD_INTERFACE_PASSWORD}"
     depends_on:
       - interface-db
       - kerberos
+      - kafka
 
   dashboard-server:
     image: cfei/dashboard-server
@@ -146,14 +152,14 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      SERVER_NAME: SingleServer
-      KAFKA_URL: "${HOST_DNS}:9093"
+      DASHBOARDS_SERVER_NAME: SingleServer
+      DASHBOARDS_KAFKA_URL: "${HOST_DNS}:9093"
       DASHBOARDS_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
       DASHBOARDS_KERBEROS_REALM: "${KERBEROS_REALM}"
       DASHBOARDS_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
-      DASHBOARDS_KERBEROS_API_SERVICE_USERNAME: dashboardserver
+      DASHBOARDS_KERBEROS_API_SERVICE_USERNAME: "dashboardserver/${HOST_DNS}"
       DASHBOARDS_KERBEROS_API_SERVICE_PASSWORD: "${DASHBOARD_SERVER_PASSWORD}"
-      DASHBOARDS_BROKER_KERBEROS_SERVICE_NAME: kafka
     depends_on:
       - interface
       - kerberos
+      - kafka
