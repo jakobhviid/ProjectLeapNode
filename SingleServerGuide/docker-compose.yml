@@ -25,7 +25,7 @@ services:
       KERBEROS_REALM: "${KERBEROS_REALM}"
       KERBEROS_API_PORT: 6000
       KERBEROS_POSTGRES_CONNECTION_STRING: "Host=${HOST_DNS};Port=5432;Database=kerberos_db;Username=${KERBEROS_DB_USER_NAME};Password=${KERBEROS_DB_USER_PASSWORD};"
-      KERBEROS_INIT_USERS: "Username=zookeeper;Password=${ZOOKEEPER_PASSWORD};Host=${HOST_DNS},Username=kafka;Password=${KAFKA_PASSWORD};Host=${HOST_DNS},Username=dashboardserver;Password=${DASHBOARD_SERVER_PASSWORD};Host=64.227.67.167,Username=dashboardinterface;Password=${DASHBOARD_INTERFACE_PASSWORD};Host=${HOST_DNS},Username=admin;Password=${ADMIN_PASSWORD}"
+      KERBEROS_INIT_USERS: "Username=zookeeper;Password=${ZOOKEEPER_PASSWORD};Host=${HOST_DNS},Username=kafka;Password=${KAFKA_PASSWORD};Host=${HOST_DNS},Username=dashboardserver;Password=${DASHBOARD_SERVER_PASSWORD};Host=${HOST_DNS},Username=dashboardinterface;Password=${DASHBOARD_INTERFACE_PASSWORD};Host=${HOST_DNS},Username=admin;Password=${ADMIN_PASSWORD}"
     depends_on:
       - kerberos-db
 

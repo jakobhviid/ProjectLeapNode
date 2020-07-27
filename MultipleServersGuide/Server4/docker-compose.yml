@@ -5,7 +5,6 @@ services:
     image: postgres
     container_name: interface-db
     restart: on-failure
-    restart: always
     environment:
       POSTGRES_USER: "${DASHBOARD_DB_USER_NAME}"
       POSTGRES_PASSWORD: "${DASHBOARD_DB_USER_PASSWORD}"

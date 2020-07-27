@@ -24,7 +24,7 @@ services:
       KAFKA_KERBEROS_API_ZOOKEEPER_PASSWORD: "${ZOOKEEPER_PASSWORD}"
       KAFKA_HEAP_OPTS: "-Xmx${KAFKA_RAM}G"
       KAFKA_ACL_ENABLE: "true"
-      KAFKA_ACL_SUPER_USERS: User:kafka;User:admin
+      KAFKA_ACL_SUPER_USERS: User:kafka;User:admin;User:dashboardserver;User:dashboardinterface
       KAFKA_ZOOKEEPER_SET_ACL: "true"
     volumes:
       - ./kafka-data:/data/kafka

@@ -8,7 +8,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      # SERVER_NAME could be Server1, Server2, Server3 etc. It has to be unique for each server
-      SERVER_NAME: SingleServer
-      # KAFKA_URL has to point to Server3 DNS resolvable address.
-      KAFKA_URL: "${HOST_DNS}:9093"
+      SERVER_NAME: "${SERVER_NAME}"
+      KAFKA_URL: "${SERVER3_HOST_DNS}:9093"
+      DASHBOARDS_KERBEROS_PUBLIC_URL: "${SERVER1_HOST_DNS}"
+      DASHBOARDS_KERBEROS_REALM: "${KERBEROS_REALM}"
+      DASHBOARDS_KERBEROS_API_URL: "http://${SERVER3_HOST_DNS}:6000/get-keytab"
+      DASHBOARDS_KERBEROS_API_SERVICE_USERNAME: dashboardserver
+      DASHBOARDS_KERBEROS_API_SERVICE_PASSWORD: "${DASHBOARD_SERVER_PASSWORD}"
+      DASHBOARDS_BROKER_KERBEROS_SERVICE_NAME: kafka

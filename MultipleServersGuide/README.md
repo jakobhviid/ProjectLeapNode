@@ -100,7 +100,7 @@ On each server do the following:
 1. Download the folder Dashboard-Server-Setup inside 'MultipleServersGuide' from this repository.
    1.  **Ubuntu**: `apt install subversion && svn export https://github.com/jakobhviid/ProjectLeapNode/trunk/MultipleServersGuide/Dashboard-Server-Setup && cd Dashboard-Server-Setup`
 
-2. Change 'KAFKA_URL' and 'SERVER_NAME' inside 'dashboard-docker-compose.yaml'
+2. Change values inside the file '.env' to fit your setup
 
 3. Run `docker-compose -f dashboard-docker-compose.yaml up`
 
