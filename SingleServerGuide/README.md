@@ -14,5 +14,3 @@ E.g. Create a Kerberos server which installs Dashboard-Server, Kerberos, then on
 3. Run the following command in your terminal (bash) `docker-compose up`
 4. Control output in the console
    1. If you encounter problems try to run `docker-compose down && docker-compose up --build`
-
-

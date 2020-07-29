@@ -14,3 +14,7 @@ The other approach is if you only have a single server. It is not recommended, b
 
 
 [**Single Server Guide**](SingleServerGuide/README.md)
+
+## Troubleshooting
+#### Kafka Cluster ID doesn't match stored ClusterID
+In case of Kafka throwing an error in regards to Cluster ID it is due to volume issues. Go inside your volume directory 'containervolumes' on your host machine. Go inside kafka-data and remove the file called 'meta.properties'. Don't delete anything else and be careful!
