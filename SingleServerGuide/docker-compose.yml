@@ -78,13 +78,13 @@ services:
     container_name: kafka
     restart: on-failure
     ports:
+      - 9091:9091
       - 9092:9092
-      - 9093:9093
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "${HOST_DNS}:2181/kafka"
-      KAFKA_LISTENERS: INTERNAL_SASL_PLAINTEXT://0.0.0.0:9092,SASL_PLAINTEXT://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: "INTERNAL_SASL_PLAINTEXT://${HOST_DNS}:9092,SASL_PLAINTEXT://${HOST_DNS}:9093"
+      KAFKA_LISTENERS: INTERNAL_SASL_PLAINTEXT://0.0.0.0:9091,SASL_PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL_SASL_PLAINTEXT://${HOST_DNS}:9091,SASL_PLAINTEXT://${HOST_DNS}:9092"
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL_SASL_PLAINTEXT
       KAFKA_AUTHENTICATION: KERBEROS
       KAFKA_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
@@ -131,7 +131,7 @@ services:
       DASHBOARDI_INIT_USER_EMAIL: "${DASHBOARD_USER_EMAIL}"
       DASHBAORDI_INIT_PASSWORD: "${DASHBOARD_USER_PASSWORD}"
       DASHBOARDI_JWT_ISSUER: "https://${HOST_DNS}:5000"
-      DASHBOARDI_KAFKA_URL: "${HOST_DNS}:9093"
+      DASHBOARDI_KAFKA_URL: "${HOST_DNS}:9092"
       DASHBOARDI_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
       DASHBOARDI_KERBEROS_REALM: "${KERBEROS_REALM}"
       DASHBOARDI_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
@@ -146,11 +146,9 @@ services:
     image: cfei/dashboard-server
     container_name: dashboard-server
     restart: on-failure
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       DASHBOARDS_SERVER_NAME: SingleServer
-      DASHBOARDS_KAFKA_URL: "${HOST_DNS}:9093"
+      DASHBOARDS_KAFKA_URL: "${HOST_DNS}:9092"
       DASHBOARDS_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
       DASHBOARDS_KERBEROS_REALM: "${KERBEROS_REALM}"
       DASHBOARDS_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
@@ -160,3 +158,84 @@ services:
       - interface
       - kerberos
       - kafka
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # --- WESLEY ---
+  # wesley-mysql:
+  #   image: cfei/mysql
+  #   restart: on-failure
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: 532c5b0a-2cd9-4eed-ad10-6dcdea6e732b
+  #     MYSQL_USER: archiver
+  #     MYSQL_PASSWORD: "${WESLEY_MYSQL_PASSWORD}"
+  #     MYSQL_DATABASE: metadata
+  #   volumes:
+  #     - ./containervolumes/wesley-mysql:/var/lib/mysql
+  #     - ./containervolumes/wesley-mysql:/var/log
+
+  # cassandra1:
+  #   image: cfei/cassandra:1.0.1
+  #   restart: on-failure
+  #   environment:
+  #     CASSANDRA_CLUSTER_NAME: reference-cluster
+  #     CASSANDRA_SEEDS: cassandra1,cassandra2
+  #     CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+  #     CASSANDRA_BROADCAST_ADDRESS: "cassandra1"
+  #     CASSANDRA_STORAGE_PORT: 7000
+  #     CASSANDRA_AUTHENTICATOR: AllowAllAuthenticator
+  #     CASSANDRA_AUTHORIZER: AllowAllAuthorizer
+  #     CASSANDRA_DATACENTER: dc1Test
+  #     CASSANDRA_RACK: rack1Test
+  #     MAX_HEAP_SIZE: 1G
+  #     HEAP_NEWSIZE: 200M
+  #   volumes:
+  #     - ./containervolumes/cassandra1/data:/opt/cassandra/data
+  #     - ./containervolumes/cassandra1/logs:/opt/cassandra/logs
+
+  # cassandra2:
+  #   image: cfei/cassandra:1.0.1
+  #   restart: on-failure
+  #   environment:
+  #     CASSANDRA_CLUSTER_NAME: reference-cluster
+  #     CASSANDRA_SEEDS: cassandra1,cassandra2
+  #     CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+  #     CASSANDRA_BROADCAST_ADDRESS: "cassandra2"
+  #     CASSANDRA_STORAGE_PORT: 7001
+  #     CASSANDRA_AUTHENTICATOR: AllowAllAuthenticator
+  #     CASSANDRA_AUTHORIZER: AllowAllAuthorizer
+  #     CASSANDRA_DATACENTER: dc1Test
+  #     CASSANDRA_RACK: rack1Test
+  #     MAX_HEAP_SIZE: 1G
+  #     HEAP_NEWSIZE: 200M
+  #   volumes:
+  #     - ./containervolumes/cassandra2/data:/opt/cassandra/data
+  #     - ./containervolumes/cassandra2/logs:/opt/cassandra/logs
+
+  # wesley:
+  #   image: cfei/wesley:0.3
+  #   restart: on-failure
+  #   environment:
+  #     KAFKA_SUBDB: /var/log/wesley/kafka_subscriptions.txt
+  #     # TODO: Wesley needs to support kerberos authentication
+  #     KAFKA_BROKERS: "${HOST_DNS}:9092"
+      
+  #     KAFKA_GROUP: uniten_archiver
+  #     KAFKA_PREFIX: uniten_archiver
+  #     MYSQL_HOST: mysql
+  #     MYSQL_PORT: 3306
+  #     # I don't know if these are all that's required here. As I can't access wesley
+  #     MYSQL_USER: archiver
+  #     MYSQL_PASSWORD: "${WESLEY_MYSQL_PASSWORD}"
+  #     MYSQL_DATABASE: metadata
+
+  #     CASSANDRA_HOSTS: cassandra1,cassandra2
+  #     CASSANDRA_PORT: 9042
+  #     CASSANDRA_KEYSPACE: data
+  #     CASSANDRA_TABLE_PREFIX: prefix_is_currently_hardcoded
+  #   volumes:
+  #     - ./containervolumes/wesley-logs:/var/log/wesley
+  #   depends_on:
+  #     - wesley-mysql
+  #     - cassandra1
+  #     - cassandra2
