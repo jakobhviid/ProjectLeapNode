@@ -1,4 +1,5 @@
 ## Multiple Servers Guide
+**NOTE:** This whole guide has been set on hold and moved around, therefore it is not done or functional at the moment
 For the following steps you need to have access to minimum 4 servers ('server1', 'server2', 'server3', 'server4') which all pass requirements described in [server setup](../SERVERSETUP.md).
 
 This guide has been written for the following versions:

@@ -1,109 +1,113 @@
 version: "3"
 
 services:
-  kerberos-db:
-    image: postgres
-    container_name: kerberos-db
-    restart: on-failure
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_USER: "${KERBEROS_DB_USER_NAME}"
-      POSTGRES_PASSWORD: "${KERBEROS_DB_USER_PASSWORD}"
-      POSTGRES_DB: kerberos_db
-    volumes:
-      - ./containervolumes/kerberos-postgres-data:/var/lib/postgresql/data
-
-  kerberos:
-    image: cfei/kerberos
-    container_name: kerberos
-    restart: on-failure
-    network_mode: "host"
-    environment:
-      KERBEROS_API_KEY: "${KERBEROS_API_KEY}"
-      KERBEROS_HOST_DNS: "${HOST_DNS}"
-      KERBEROS_REALM: "${KERBEROS_REALM}"
-      KERBEROS_API_PORT: 6000
-      KERBEROS_POSTGRES_CONNECTION_STRING: "Host=${HOST_DNS};Port=5432;Database=kerberos_db;Username=${KERBEROS_DB_USER_NAME};Password=${KERBEROS_DB_USER_PASSWORD};"
-      KERBEROS_INIT_USERS: "Username=zookeeper;Password=${ZOOKEEPER_PASSWORD};Host=${HOST_DNS},Username=kafka;Password=${KAFKA_PASSWORD};Host=${HOST_DNS},Username=dashboardserver;Password=${DASHBOARD_SERVER_PASSWORD};Host=${HOST_DNS},Username=dashboardinterface;Password=${DASHBOARD_INTERFACE_PASSWORD};Host=${HOST_DNS},Username=admin;Password=${ADMIN_PASSWORD}"
-    depends_on:
-      - kerberos-db
-
-  zookeeper:
-    image: cfei/zookeeper:2.0.0-beta
-    container_name: zookeeper
+  zookeeper1:
+    image: cfei/zookeeper:1.1.0
+    container_name: zookeeper1
     restart: on-failure
     ports:
       - 2181:2181
-      - 2888:2888
-      - 3888:3888
     environment:
       ZOO_ID: 1
       ZOO_PORT: 2181
-      ZOO_AUTHENTICATION: KERBEROS
-      ZOO_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
-      ZOO_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
-      ZOO_KERBEROS_API_USERNAME: "zookeeper/${HOST_DNS}"
-      ZOO_KERBEROS_API_PASSWORD: "${ZOOKEEPER_PASSWORD}"
-      ZOO_KERBEROS_REALM: "${KERBEROS_REALM}"
-      ZOO_REMOVE_HOST_AND_REALM: "true"
-    depends_on:
-      - kerberos
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888,server.2=zookeeper2:2888:3888,server.3=zookeeper3:2888:3888
     volumes:
-      - ./containervolumes/zookeeper-data:/data/zookeeper
-      - ./containervolumes/zookeeper-logs:/datalogs/zookeeper
+      - ./containervolumes/zookeeper1-data:/data/zookeeper
+      - ./containervolumes/zookeeper1-logs:/datalogs/zookeeper
 
-  acl-manager:
-    image: cfei/acl-security-manager
-    container_name: acl-manager
+  zookeeper2:
+    image: cfei/zookeeper:1.1.0
+    container_name: zookeeper2
     restart: on-failure
     ports:
-      - 9000:9000
+      - 2182:2181
     environment:
-      # Kafka by default uses chroot of /kafka. This is extremly important as otherwise kafka won't register the ACLS defined by acl-manager
-      AUTHORIZER_ZOOKEEPER_CONNECT: "${HOST_DNS}:2181/kafka"
-      ACL_API_PORT: 9000
-      ACL_API_KEY: "${ACL_MANAGER_API_KEY}"
-      ACL_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
-      ACL_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
-      ACL_KERBEROS_API_ZOOKEEPER_USERNAME: "zookeeper/${HOST_DNS}"
-      ACL_KERBEROS_API_ZOOKEEPER_PASSWORD: "${ZOOKEEPER_PASSWORD}"
-      ACL_KERBEROS_REALM: "${KERBEROS_REALM}"
-    depends_on:
-      - zookeeper
-      - kerberos
+      ZOO_ID: 2
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zookeeper1:2888:3888,server.2=0.0.0.0:2888:3888,server.3=zookeeper3:2888:3888
+    volumes:
+      - ./containervolumes/zookeeper2-data:/data/zookeeper
+      - ./containervolumes/zookeeper2-logs:/datalogs/zookeeper
 
-  kafka:
-    image: cfei/kafka:2.0.0-beta
-    container_name: kafka
+  zookeeper3:
+    image: cfei/zookeeper:1.1.0
+    container_name: zookeeper3
+    restart: on-failure
+    ports:
+      - 2183:2181
+    environment:
+      ZOO_ID: 3
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zookeeper1:2888:3888,server.2=zookeeper2:2888:3888,server.3=0.0.0.0:2888:3888
+    volumes:
+      - ./containervolumes/zookeeper3-data:/data/zookeeper
+      - ./containervolumes/zookeeper3-logs:/datalogs/zookeeper
+
+  kafka1:
+    image: cfei/kafka:1.0.0
+    container_name: kafka1
     restart: on-failure
     ports:
       - 9091:9091
       - 9092:9092
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: "${HOST_DNS}:2181/kafka"
-      KAFKA_LISTENERS: INTERNAL_SASL_PLAINTEXT://0.0.0.0:9091,SASL_PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: "INTERNAL_SASL_PLAINTEXT://${HOST_DNS}:9091,SASL_PLAINTEXT://${HOST_DNS}:9092"
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL_SASL_PLAINTEXT
-      KAFKA_AUTHENTICATION: KERBEROS
-      KAFKA_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
-      KAFKA_KERBEROS_REALM: "${KERBEROS_REALM}"
-      KAFKA_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
-      KAFKA_KERBEROS_API_KAFKA_USERNAME: "kafka/${HOST_DNS}"
-      KAFKA_KERBEROS_API_KAFKA_PASSWORD: "${KAFKA_PASSWORD}"
-      KAFKA_KERBEROS_API_ZOOKEEPER_USERNAME: "zookeeper/${HOST_DNS}"
-      KAFKA_KERBEROS_API_ZOOKEEPER_PASSWORD: "${ZOOKEEPER_PASSWORD}"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181/kafka,zookeeper2:2181/kafka,zookeeper3:2181/kafka
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9091,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://${HOST_DNS}:9091,EXTERNAL://${HOST_DNS}:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_HEAP_OPTS: "-Xmx${KAFKA_RAM}G"
-      KAFKA_ACL_ENABLE: "true"
-      KAFKA_ACL_SUPER_USERS: User:kafka;User:admin;User:dashboardserver;User:dashboardinterface
-      KAFKA_ZOOKEEPER_SET_ACL: "true"
     depends_on:
-      - kerberos
-      - zookeeper
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
     volumes:
-      - ./containervolumes/kafka-data:/data/kafka
-      - ./containervolumes/kafka-logs:/opt/kafka/logs
+      - ./containervolumes/kafka-data1:/data/kafka
+      - ./containervolumes/kafka-logs1:/opt/kafka/logs
+
+  kafka2:
+    image: cfei/kafka:1.0.0
+    container_name: kafka2
+    restart: on-failure
+    ports:
+      - 9093:9093
+      - 9094:9094
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181/kafka,zookeeper2:2181/kafka,zookeeper3:2181/kafka
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://${HOST_DNS}:9093,EXTERNAL://${HOST_DNS}:9094"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_HEAP_OPTS: "-Xmx${KAFKA_RAM}G"
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    volumes:
+      - ./containervolumes/kafka-data2:/data/kafka
+      - ./containervolumes/kafka-logs2:/opt/kafka/logs
+
+  kafka3:
+    image: cfei/kafka:1.0.0
+    container_name: kafka3
+    restart: on-failure
+    ports:
+      - 9095:9095
+      - 9096:9096
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181/kafka,zookeeper2:2181/kafka,zookeeper3:2181/kafka
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9095,EXTERNAL://0.0.0.0:9096
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://${HOST_DNS}:9095,EXTERNAL://${HOST_DNS}:9096"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_HEAP_OPTS: "-Xmx${KAFKA_RAM}G"
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    volumes:
+      - ./containervolumes/kafka-data3:/data/kafka
+      - ./containervolumes/kafka-logs3:/opt/kafka/logs
 
   interface-db:
     image: postgres
@@ -131,16 +135,12 @@ services:
       DASHBOARDI_INIT_USER_EMAIL: "${DASHBOARD_USER_EMAIL}"
       DASHBAORDI_INIT_PASSWORD: "${DASHBOARD_USER_PASSWORD}"
       DASHBOARDI_JWT_ISSUER: "https://${HOST_DNS}:5000"
-      DASHBOARDI_KAFKA_URL: "${HOST_DNS}:9092"
-      DASHBOARDI_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
-      DASHBOARDI_KERBEROS_REALM: "${KERBEROS_REALM}"
-      DASHBOARDI_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
-      DASHBOARDI_KERBEROS_API_SERVICE_USERNAME: "dashboardinterface/${HOST_DNS}"
-      DASHBOARDI_KERBEROS_API_SERVICE_PASSWORD: "${DASHBOARD_INTERFACE_PASSWORD}"
+      DASHBOARDI_KAFKA_URL: kafka1:9092,kafka2:9094,kafka3:9096
     depends_on:
       - interface-db
-      - kerberos
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
 
   dashboard-server:
     image: cfei/dashboard-server
@@ -148,94 +148,90 @@ services:
     restart: on-failure
     environment:
       DASHBOARDS_SERVER_NAME: SingleServer
-      DASHBOARDS_KAFKA_URL: "${HOST_DNS}:9092"
-      DASHBOARDS_KERBEROS_PUBLIC_URL: "${HOST_DNS}"
-      DASHBOARDS_KERBEROS_REALM: "${KERBEROS_REALM}"
-      DASHBOARDS_KERBEROS_API_URL: "http://${HOST_DNS}:6000/get-keytab"
-      DASHBOARDS_KERBEROS_API_SERVICE_USERNAME: "dashboardserver/${HOST_DNS}"
-      DASHBOARDS_KERBEROS_API_SERVICE_PASSWORD: "${DASHBOARD_SERVER_PASSWORD}"
+      DASHBOARDS_KAFKA_URL: kafka1:9092,kafka2:9094,kafka3:9096
     depends_on:
       - interface
-      - kerberos
       - kafka
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  # --- WESLEY ---
-  # wesley-mysql:
-  #   image: cfei/mysql
-  #   restart: on-failure
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: 532c5b0a-2cd9-4eed-ad10-6dcdea6e732b
-  #     MYSQL_USER: archiver
-  #     MYSQL_PASSWORD: "${WESLEY_MYSQL_PASSWORD}"
-  #     MYSQL_DATABASE: metadata
-  #   volumes:
-  #     - ./containervolumes/wesley-mysql:/var/lib/mysql
-  #     - ./containervolumes/wesley-mysql:/var/log
+# Wesley
+  wesley-mysql:
+    image: cfei/mysql
+    container_name: wesley-mysql
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: 532c5b0a-2cd9-4eed-ad10-6dcdea6e732b
+      MYSQL_USER: archiver
+      MYSQL_PASSWORD: c0d9f4f4-f978-4ff3-98a7-8a30a182bbd9
+      MYSQL_DATABASE: metadata
+    volumes:
+      - ./containervolumes/wesley-mysql:/var/lib/mysql
+      - ./containervolumes/wesley-mysql:/var/log
 
-  # cassandra1:
-  #   image: cfei/cassandra:1.0.1
-  #   restart: on-failure
-  #   environment:
-  #     CASSANDRA_CLUSTER_NAME: reference-cluster
-  #     CASSANDRA_SEEDS: cassandra1,cassandra2
-  #     CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
-  #     CASSANDRA_BROADCAST_ADDRESS: "cassandra1"
-  #     CASSANDRA_STORAGE_PORT: 7000
-  #     CASSANDRA_AUTHENTICATOR: AllowAllAuthenticator
-  #     CASSANDRA_AUTHORIZER: AllowAllAuthorizer
-  #     CASSANDRA_DATACENTER: dc1Test
-  #     CASSANDRA_RACK: rack1Test
-  #     MAX_HEAP_SIZE: 1G
-  #     HEAP_NEWSIZE: 200M
-  #   volumes:
-  #     - ./containervolumes/cassandra1/data:/opt/cassandra/data
-  #     - ./containervolumes/cassandra1/logs:/opt/cassandra/logs
+  cassandra1:
+    image: cfei/cassandra:1.0.1
+    container_name: container1
+    restart: on-failure
+    environment:
+      CASSANDRA_CLUSTER_NAME: reference-cluster
+      CASSANDRA_SEEDS: cassandra1,cassandra2
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_BROADCAST_ADDRESS: "cassandra1"
+      CASSANDRA_STORAGE_PORT: 7000
+      CASSANDRA_AUTHENTICATOR: AllowAllAuthenticator
+      CASSANDRA_AUTHORIZER: AllowAllAuthorizer
+      CASSANDRA_DATACENTER: dc1Test
+      CASSANDRA_RACK: rack1Test
+      MAX_HEAP_SIZE: 1G
+      HEAP_NEWSIZE: 200M
+    volumes:
+      - ./containervolumes/cassandra1/data:/opt/cassandra/data
+      - ./containervolumes/cassandra1/logs:/opt/cassandra/logs
 
-  # cassandra2:
-  #   image: cfei/cassandra:1.0.1
-  #   restart: on-failure
-  #   environment:
-  #     CASSANDRA_CLUSTER_NAME: reference-cluster
-  #     CASSANDRA_SEEDS: cassandra1,cassandra2
-  #     CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
-  #     CASSANDRA_BROADCAST_ADDRESS: "cassandra2"
-  #     CASSANDRA_STORAGE_PORT: 7001
-  #     CASSANDRA_AUTHENTICATOR: AllowAllAuthenticator
-  #     CASSANDRA_AUTHORIZER: AllowAllAuthorizer
-  #     CASSANDRA_DATACENTER: dc1Test
-  #     CASSANDRA_RACK: rack1Test
-  #     MAX_HEAP_SIZE: 1G
-  #     HEAP_NEWSIZE: 200M
-  #   volumes:
-  #     - ./containervolumes/cassandra2/data:/opt/cassandra/data
-  #     - ./containervolumes/cassandra2/logs:/opt/cassandra/logs
+  cassandra2:
+    image: cfei/cassandra:1.0.1
+    container_name: container2
+    restart: on-failure
+    environment:
+      CASSANDRA_CLUSTER_NAME: reference-cluster
+      CASSANDRA_SEEDS: cassandra1,cassandra2
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_BROADCAST_ADDRESS: "cassandra2"
+      CASSANDRA_STORAGE_PORT: 7001
+      CASSANDRA_AUTHENTICATOR: AllowAllAuthenticator
+      CASSANDRA_AUTHORIZER: AllowAllAuthorizer
+      CASSANDRA_DATACENTER: dc1Test
+      CASSANDRA_RACK: rack1Test
+      MAX_HEAP_SIZE: 1G
+      HEAP_NEWSIZE: 200M
+    volumes:
+      - ./containervolumes/cassandra2/data:/opt/cassandra/data
+      - ./containervolumes/cassandra2/logs:/opt/cassandra/logs
 
-  # wesley:
-  #   image: cfei/wesley:0.3
-  #   restart: on-failure
-  #   environment:
-  #     KAFKA_SUBDB: /var/log/wesley/kafka_subscriptions.txt
-  #     # TODO: Wesley needs to support kerberos authentication
-  #     KAFKA_BROKERS: "${HOST_DNS}:9092"
-      
-  #     KAFKA_GROUP: uniten_archiver
-  #     KAFKA_PREFIX: uniten_archiver
-  #     MYSQL_HOST: mysql
-  #     MYSQL_PORT: 3306
-  #     # I don't know if these are all that's required here. As I can't access wesley
-  #     MYSQL_USER: archiver
-  #     MYSQL_PASSWORD: "${WESLEY_MYSQL_PASSWORD}"
-  #     MYSQL_DATABASE: metadata
-
-  #     CASSANDRA_HOSTS: cassandra1,cassandra2
-  #     CASSANDRA_PORT: 9042
-  #     CASSANDRA_KEYSPACE: data
-  #     CASSANDRA_TABLE_PREFIX: prefix_is_currently_hardcoded
-  #   volumes:
-  #     - ./containervolumes/wesley-logs:/var/log/wesley
-  #   depends_on:
-  #     - wesley-mysql
-  #     - cassandra1
-  #     - cassandra2
+  wesley:
+    image: cfei/wesley:0.3
+    restart: on-failure
+    environment:
+      KAFKA_SUBDB: /var/log/wesley/kafka_subscriptions.txt
+      KAFKA_BROKERS: "stage1.cfei.dk:9092,stage2.cfei.dk:9092,stage3.cfei.dk:9092"
+      KAFKA_GROUP: uniten_archiver
+      KAFKA_PREFIX: uniten_archiver
+      MYSQL_HOST: wesley-mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: archiver
+      MYSQL_PASSWORD: "${WESLEY_MYSQL_PASSWORD}"
+      MYSQL_DATABASE: metadata
+      CASSANDRA_HOSTS: cassandra1,cassandra2
+      CASSANDRA_PORT: 9042
+      CASSANDRA_KEYSPACE: data
+      CASSANDRA_TABLE_PREFIX: prefix_is_currently_hardcoded
+    volumes:
+      - ./containervolumes/wesley-logs:/var/log/wesley
+    depends_on:
+      - wesley-mysql
+      - cassandra1
+      - cassandra2
+      - kafka1
+      - kafka2
+      - kafka3

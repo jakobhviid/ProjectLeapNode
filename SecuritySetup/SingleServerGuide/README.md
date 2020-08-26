@@ -1,6 +1,8 @@
-## Single Server Guide
+## Single Server Guide With Security
+**NOTE:** This whole guide has been set on hold and moved around, therefore it is not done or functional at the moment
 
-For this setup you run the whole stack without security on a single linux server. It is not recommended, but can be useful in some cases.
+
+For this setup you run the whole stack on a single linux server. It is not recommended, but can be useful in some cases.
 
 This server is refered to as 'SingleServer'. Make sure this server passes the requirements described in [server setup](../SERVERSETUP.md). **Make sure you have opened all the ports and are on a linux machine**.
 
