@@ -10,23 +10,23 @@
 
 #### Recommended
 
-| Name         |  CPU  |  RAM  | Storage |     Network Ports      |                    Public Ports                    |
-| ------------ | :---: | :---: | :-----: | :--------------------: | :------------------------------------------------: |
-| Server1      |   2   |  4GB  |  45GB   |        88, 6000        |                                                    |
-| Server2      |   4   |  6GB  | 100GB+  | 2181, 2888, 3888, 9000 |                         -                          |
-| Server3      |   4   |  8GB  | 100GB+  |          9092          |                        9093                        |
-| Server4      |   4   |  6GB  | 100GB+  |          5000          |                        3000                        |
-| SingleServer |   6   | 12GB  | 250GB+  |           -            | 9092, 9093, 3000, 5000, 2181, 2888, 3888, 5432, 88 |
+| Name         |  CPU  |  RAM  | Storage |     Network Ports      |                                Public Ports                                |
+| ------------ | :---: | :---: | :-----: | :--------------------: | :------------------------------------------------------------------------: |
+| Server1      |   2   |  4GB  |  45GB   |        88, 6000        |                                                                            |
+| Server2      |   4   |  6GB  | 100GB+  | 2181, 2888, 3888, 9000 |                                     -                                      |
+| Server3      |   4   |  8GB  | 100GB+  |          9092          |                                    9093                                    |
+| Server4      |   4   |  6GB  | 100GB+  |          5000          |                                    3000                                    |
+| SingleServer |   6   | 12GB  | 250GB+  |           -            | 9091, 9092, 9093, 9094, 9095, 9096, 3000, 5000, 2181, 2888, 3888, 5432, 88 |
 
 #### Minimum
 
-| Name         |  CPU  |  RAM  | Storage |     Network Ports      |                    Public Ports                    |
-| ------------ | :---: | :---: | :-----: | :--------------------: | :------------------------------------------------: |
-| Server1      |   2   |  2GB  |  20GB   |        88, 6000        |                                                    |
-| Server2      |   2   |  3GB  |  50GB   | 2181, 2888, 3888, 9000 |                         -                          |
-| Server3      |   2   |  4GB  |  50GB   |          9092          |                        9093                        |
-| Server4      |   2   |  3GB  |  50GB   |          5000          |                        3000                        |
-| SingleServer |   4   |  6GB  |  80GB   |           -            | 9092, 9093, 3000, 5000, 2181, 2888, 3888, 5432, 88 |
+| Name         |  CPU  |  RAM  | Storage |     Network Ports      |                                Public Ports                                |
+| ------------ | :---: | :---: | :-----: | :--------------------: | :------------------------------------------------------------------------: |
+| Server1      |   2   |  2GB  |  20GB   |        88, 6000        |                                                                            |
+| Server2      |   2   |  3GB  |  50GB   | 2181, 2888, 3888, 9000 |                                     -                                      |
+| Server3      |   2   |  4GB  |  50GB   |          9092          |                                    9093                                    |
+| Server4      |   2   |  3GB  |  50GB   |          5000          |                                    3000                                    |
+| SingleServer |   4   |  6GB  |  80GB   |           -            | 9091, 9092, 9093, 9094, 9095, 9096, 3000, 5000, 2181, 2888, 3888, 5432, 88 |
 
 #### Individual Service Requirements
 Kafka and zookeeper storage can be increased depending on your needs. If your kafka / zookeeper cluster is huge, you will need to increase storage as they store logs on disk.
