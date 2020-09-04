@@ -1,0 +1,43 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+Title "Create Container"
+
+
+actor "User" as user
+
+participant "Dashboard Interface (UI)" as ui
+participant "Dashboard Interface (SocketServer)" as socketserver
+participant "Kafka" as kafka
+participant "Dashboard Server" as dserver
+
+user -> ui : Container data
+activate ui
+ui -> socketserver : CreateNewContainer(topic, container data)
+activate socketserver
+activate kafka
+socketserver -> kafka : JSON serialised container data
+kafka -> dserver : JSON serialised container data
+deactivate kafka
+activate dserver
+dserver -> dserver : DeserializeObject(JSON serialised container data)
+
+Alt Container data follows correct format
+    dserver -> dserver : Create container on host
+    dserver -> kafka : Succesful message to response topic
+    kafka -> socketserver : Succesful message to response topic
+    socketserver -> ui : Succesful message
+    ui -> user : Graphical succesful message
+else Container data format incorrect
+    dserver -> kafka : Error message to response topic
+    activate kafka
+    deactivate dserver
+    kafka -> socketserver : Error message to response topic
+    deactivate kafka
+    socketserver -> ui : Error message
+    ui -> user : Graphical error message
+    deactivate ui
+    deactivate socketserver
+end
+@enduml
