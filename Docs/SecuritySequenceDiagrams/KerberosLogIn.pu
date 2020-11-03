@@ -4,24 +4,37 @@ skinparam sequenceMessageAlign center
 
 Title "Kerberos login"
 
-
 actor "External Service" as es
 
-participant "Kerberos" as kerberos
+participant "Kerberos Web Server" as kerberosws
+database "Kerberos Database" as kdata
 
 participant "Kafka" as kafka
-participant "Zoo" as zoo
 
-es -> kerberos : FetchKeytab(username, password)
+participant "Zookeeper" as zoo
+
+es -> kerberosws : FetchKeytab(username, password)
+activate kerberosws
 note left
     This diagram takes place after
-    CreateKerberosUser. 
+    ExternalServiceAccessExample. 
     External Service is an example service
     wanting to use kafka
 end note
-return Keytab
 
-es -> kafka : Communicate(keytab)
+kerberosws -> kdata : FetchKeytab()
+activate kdata
+kdata -> kerberosws: Keytab
+deactivate kdata
+
+kerberosws -> es: Keytab
+deactivate kerberosws
+
+es -> kafka : Authenticate using Keytab
+note right
+    This is an abstraction of the authentication
+    process between kafka, zookeeper and kerberos.
+end note
 kafka -> zoo : Check user privileges
 
 @enduml

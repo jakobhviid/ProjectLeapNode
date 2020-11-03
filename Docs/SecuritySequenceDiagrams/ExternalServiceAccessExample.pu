@@ -1,0 +1,59 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+Title "Create Kerberos User"
+
+actor "Kerberos Admin" as kadmin
+actor "Security Admin" as sadmin
+
+participant "Kerberos Web Server" as kerberosws
+participant "Kerberos" as kerberos
+database "Kerberos Database" as kdata
+
+participant "Security Manager Web Server" as smanagerws
+participant "Security Manager" as smanager
+participant "Zookeeper" as zoo
+
+' TODO: Extend with CA and External Service Example
+
+kadmin -> kerberosws : Create Keytab (apikey, username, password)
+
+activate kerberosws
+kerberosws -> kerberos : Create User(username, password)
+activate kerberos
+note left
+    Kerberos Admin can create the keytab either
+    with a POST request 
+    or with the use of Dashboard-Interface
+end note
+kerberos -> kerberos : Create Keytab
+kerberos -> kerberosws : Keytab
+deactivate kerberos
+
+kerberosws -> kdata : Store Keytab
+
+kerberosws -> kadmin : Keytab
+
+deactivate kerberosws
+
+sadmin -> smanagerws : Create super user(apikey, username)
+activate smanagerws
+note right
+    Security Admin can create the super user either
+    with a POST request 
+    or with the use of Dashboard-Interface
+end note
+smanagerws -> smanager : Create super user()
+activate smanager
+note left
+    In practice, Security Manager Web Server inserts new entries into a file.
+    Security Manager listens for changes in this file
+end note
+
+smanagerws -> sadmin : OK
+deactivate smanagerws
+
+smanager -> zoo : Store new super user privileges
+deactivate smanager
+@enduml

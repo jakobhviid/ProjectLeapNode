@@ -4,42 +4,51 @@ skinparam sequenceMessageAlign center
 
 Title "Refetch Overview Data"
 
-
 actor "User" as user
 
 participant "Dashboard Interface (UI)" as ui
 participant "Dashboard Interface (SocketServer)" as socketserver
 participant "Kafka" as kafka
-participant "Dashboard Server" as dserver
+participant "Dashboard Server (Server n)" as dserver
+participant "Docker Socket (Server n)" as docker
 
 user -> ui : Refetch Overview Data
 activate ui
 ui -> socketserver : RefetchOverviewData(topic)
 activate socketserver
-activate kafka
+
 socketserver -> kafka : Refetch request serialised
-kafka -> dserver : Refetch request serialised
+activate kafka
+kafka -> dserver : Refetch request object
 deactivate kafka
 activate dserver
-dserver -> dserver : DeserializeObject(Refetch request serialised)
+dserver -> dserver : DeserializeObject(Refetch request object)
 
 alt Refetch Request follows corrects format
-    dserver -> dserver : RefetechOverviewData
+    dserver -> docker : RefetchOverviewData
+    activate docker
+    docker -> dserver : Overview Data
+    deactivate docker
+
     dserver -> kafka : Send Overview Data to overview topic
-    dserver -> kafka : Succesful message to response topic
+    activate kafka
+    dserver -> kafka : OK message to response topic
     kafka -> socketserver : Send Overview Data to overview topic
-    kafka -> socketserver : Succesful message to response topic
+    kafka -> socketserver : OK message to response topic
+    deactivate kafka
+
     socketserver -> ui : Updated overview data
-    socketserver -> ui : Succesful message
+    socketserver -> ui : OK message
+
     ui -> user : Update overview data
     ui -> user : Graphical succesful message
 else Refetch Request incorrect format
-    dserver -> kafka : Error message to response topic
+    dserver -> kafka : BAD message to response topic
     activate kafka
     deactivate dserver
-    kafka -> socketserver : Error message to response topic
+    kafka -> socketserver : BAD message to response topic
     deactivate kafka
-    socketserver -> ui : Error message
+    socketserver -> ui : BAD message
     ui -> user : Graphical error message
     deactivate ui
     deactivate socketserver
